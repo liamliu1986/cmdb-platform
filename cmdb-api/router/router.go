@@ -8,6 +8,7 @@ import (
 	"cmdb-api/modules/core"
 	"cmdb-api/modules/dcim"
 	"cmdb-api/modules/discovery"
+	"cmdb-api/modules/integration"
 	"cmdb-api/modules/ipam"
 )
 
@@ -18,6 +19,7 @@ func Setup(r *gin.Engine) {
 	ipamHandler := ipam.NewIPAMHandler()
 	dcimHandler := dcim.NewDCIMHandler()
 	discoveryHandler := discovery.NewDiscoveryHandler()
+	integrationHandler := integration.NewIntegrationHandler()
 	jwtMiddleware := middleware.JWTAuth(cfg)
 
 	api := r.Group("/api/v1")
@@ -69,6 +71,11 @@ func Setup(r *gin.Engine) {
 			authorized.GET("/discovery/rules", discoveryHandler.ListRules)
 			authorized.POST("/discovery/rules/execute", discoveryHandler.ExecuteRule)
 			authorized.GET("/discovery/agents", discoveryHandler.ListAgents)
+
+			// Integration
+			authorized.GET("/integration/prometheus/query", integrationHandler.PrometheusQuery)
+			authorized.POST("/integration/elk/search", integrationHandler.ELKSearch)
+			authorized.POST("/integration/email/test", integrationHandler.SendTestEmail)
 		}
 	}
 }
