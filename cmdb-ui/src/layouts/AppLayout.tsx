@@ -1,6 +1,6 @@
 import { Layout, Menu } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { HomeOutlined, BuildOutlined, DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined, RadarChartOutlined, RobotOutlined, ClusterOutlined, EnvironmentOutlined } from '@ant-design/icons'
+import { HomeOutlined, BuildOutlined, DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined, RadarChartOutlined, RobotOutlined, ClusterOutlined, EnvironmentOutlined, DashboardOutlined } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
 
@@ -20,6 +20,7 @@ export default function AppLayout() {
     { key: '/relations', icon: <ApartmentOutlined />, label: '关系图谱' },
     { key: '/topology', icon: <ClusterOutlined />, label: '层级拓扑' },
     { key: '/idcmap', icon: <EnvironmentOutlined />, label: 'IDC地图' },
+    { key: '/monitor', icon: <DashboardOutlined />, label: '监控集成' },
   ]
 
   return (
