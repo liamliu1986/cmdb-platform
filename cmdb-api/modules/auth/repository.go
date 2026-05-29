@@ -77,3 +77,16 @@ func (r *AuthRepository) GetUserRoles(userID uint) ([]Role, error) {
 		Find(&roles).Error
 	return roles, err
 }
+
+// CheckRolePermission checks if a role has a specific permission on a resource
+func (r *AuthRepository) CheckRolePermission(roleID uint, resourceName string, permissionName string) (bool, error) {
+	var count int64
+	err := database.DB.Table("cmdb_auth.role_permissions").
+		Joins("JOIN cmdb_auth.resources ON resources.id = role_permissions.resource_id").
+		Joins("JOIN cmdb_auth.permissions ON permissions.id = role_permissions.permission_id").
+		Where("role_permissions.role_id = ?", roleID).
+		Where("resources.name = ?", resourceName).
+		Where("permissions.name = ?", permissionName).
+		Count(&count).Error
+	return count > 0, err
+}

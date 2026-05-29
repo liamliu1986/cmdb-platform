@@ -1,6 +1,7 @@
 package jwtutil
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -27,6 +28,9 @@ func GenerateToken(userID uint, username string, secret string, expireHours int)
 
 func ParseToken(tokenString string, secret string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
 		return []byte(secret), nil
 	})
 	if err != nil {

@@ -1,6 +1,8 @@
 package router
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"cmdb-api/config"
 	"cmdb-api/middleware"
@@ -13,12 +15,14 @@ func Setup(r *gin.Engine) {
 	authHandler := auth.NewAuthHandler(cfg)
 	coreHandler := core.NewCoreHandler()
 	jwtMiddleware := middleware.JWTAuth(cfg)
+	// Rate limit: 10 requests per minute for auth endpoints
+	rateLimit := middleware.RateLimit(10, time.Minute)
 
 	api := r.Group("/api/v1")
 	{
-		// Public
-		api.POST("/auth/register", authHandler.Register)
-		api.POST("/auth/login", authHandler.Login)
+		// Public (with rate limiting)
+		api.POST("/auth/register", rateLimit, authHandler.Register)
+		api.POST("/auth/login", rateLimit, authHandler.Login)
 
 		// Protected
 		authorized := api.Group("", jwtMiddleware)

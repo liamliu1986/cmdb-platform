@@ -60,6 +60,10 @@ func (s *AuthService) CheckPermission(userID uint, resourceName string, permissi
 		if role.IsAdmin {
 			return true
 		}
+		hasPerm, _ := s.repo.CheckRolePermission(role.ID, resourceName, permissionName)
+		if hasPerm {
+			return true
+		}
 	}
 	return false
 }
