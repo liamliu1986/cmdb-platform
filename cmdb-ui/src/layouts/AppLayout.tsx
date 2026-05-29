@@ -15,6 +15,7 @@ export default function AppLayout() {
     { key: '/dcim', icon: <BankOutlined />, label: 'DCIM' },
     { key: '/discovery', icon: <RadarChartOutlined />, label: '自动发现' },
     { key: '/agents', icon: <RobotOutlined />, label: 'Agent管理' },
+    { key: '/relations', icon: <ApartmentOutlined />, label: '关系图谱' },
   ]
 
   return (
