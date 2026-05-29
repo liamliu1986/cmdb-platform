@@ -7,6 +7,11 @@ import (
 	"syscall"
 
 	"cmdb-agent/core"
+	"cmdb-agent/plugins"
+	_ "cmdb-agent/plugins/aliyun"
+	_ "cmdb-agent/plugins/tencent"
+	_ "cmdb-agent/plugins/huawei"
+	_ "cmdb-agent/plugins/aws"
 )
 
 func main() {
@@ -21,6 +26,11 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Registered successfully, token:", cfg.Token)
+	}
+
+	fmt.Println("Available plugins:")
+	for name := range plugins.Registry {
+		fmt.Println(" -", name)
 	}
 
 	fmt.Println("Agent started, sending heartbeats to", cfg.MasterURL)
