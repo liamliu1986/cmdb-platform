@@ -3,6 +3,8 @@ import Login from '@/modules/auth/Login'
 import AppLayout from '@/layouts/AppLayout'
 import CITypeList from '@/modules/core/CITypeList'
 import CIList from '@/modules/core/CIList'
+import SubnetList from '@/modules/ipam/SubnetList'
+import IDCList from '@/modules/dcim/IDCList'
 
 export default function AppRouter() {
   return (
@@ -13,6 +15,8 @@ export default function AppRouter() {
           <Route index element={<CITypeList />} />
           <Route path="citypes" element={<CITypeList />} />
           <Route path="ci" element={<CIList />} />
+          <Route path="ipam" element={<SubnetList />} />
+          <Route path="dcim" element={<IDCList />} />
         </Route>
         <Route path="*" element={<div>404</div>} />
       </Routes>

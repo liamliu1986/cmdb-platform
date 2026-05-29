@@ -6,12 +6,16 @@ import (
 	"cmdb-api/middleware"
 	"cmdb-api/modules/auth"
 	"cmdb-api/modules/core"
+	"cmdb-api/modules/dcim"
+	"cmdb-api/modules/ipam"
 )
 
 func Setup(r *gin.Engine) {
 	cfg := config.Load()
 	authHandler := auth.NewAuthHandler(cfg)
 	coreHandler := core.NewCoreHandler()
+	ipamHandler := ipam.NewIPAMHandler()
+	dcimHandler := dcim.NewDCIMHandler()
 	jwtMiddleware := middleware.JWTAuth(cfg)
 
 	api := r.Group("/api/v1")
@@ -34,6 +38,20 @@ func Setup(r *gin.Engine) {
 			authorized.PUT("/ci/:id", coreHandler.UpdateCI)
 			authorized.DELETE("/ci/:id", coreHandler.DeleteCI)
 			authorized.GET("/ci/s", coreHandler.SearchCI)
+
+			// IPAM
+			authorized.POST("/ipam/subnets", ipamHandler.CreateSubnet)
+			authorized.GET("/ipam/subnets", ipamHandler.ListSubnets)
+			authorized.POST("/ipam/ips/allocate", ipamHandler.AllocateIP)
+			authorized.POST("/ipam/ips/:id/release", ipamHandler.ReleaseIP)
+
+			// DCIM
+			authorized.POST("/dcim/idcs", dcimHandler.CreateIDC)
+			authorized.GET("/dcim/idcs", dcimHandler.ListIDCs)
+			authorized.POST("/dcim/rooms", dcimHandler.CreateRoom)
+			authorized.POST("/dcim/racks", dcimHandler.CreateRack)
+			authorized.POST("/dcim/racks/mount", dcimHandler.MountDevice)
+			authorized.DELETE("/dcim/racks/:rack_id/devices/:u_position", dcimHandler.UnmountDevice)
 		}
 	}
 }

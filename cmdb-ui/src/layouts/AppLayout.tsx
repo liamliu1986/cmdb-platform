@@ -1,6 +1,6 @@
 import { Layout, Menu } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { DatabaseOutlined, AppstoreOutlined } from '@ant-design/icons'
+import { DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
 
@@ -11,6 +11,8 @@ export default function AppLayout() {
   const menuItems = [
     { key: '/citypes', icon: <AppstoreOutlined />, label: '模型管理' },
     { key: '/ci', icon: <DatabaseOutlined />, label: '资源管理' },
+    { key: '/ipam', icon: <ApartmentOutlined />, label: 'IPAM' },
+    { key: '/dcim', icon: <BankOutlined />, label: 'DCIM' },
   ]
 
   return (
