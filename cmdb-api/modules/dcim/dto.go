@@ -24,3 +24,11 @@ type MountDeviceRequest struct {
 	UPosition  int  `json:"u_position" binding:"required"`
 	DeviceCIID uint `json:"device_ci_id" binding:"required"`
 }
+
+type SetCoordRequest struct {
+	CIID        uint    `json:"ci_id" binding:"required"`
+	Lat         float64 `json:"lat" binding:"required"`
+	Lng         float64 `json:"lng" binding:"required"`
+	Address     string  `json:"address"`
+	MapProvider string  `json:"map_provider"`
+}

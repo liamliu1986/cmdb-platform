@@ -15,6 +15,8 @@ func NewDCIMHandler() *DCIMHandler {
 	return &DCIMHandler{svc: NewDCIMService()}
 }
 
+var coordRepo = &locationRepo{}
+
 func (h *DCIMHandler) CreateIDC(c *gin.Context) {
 	var req CreateIDCRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -87,4 +89,57 @@ func (h *DCIMHandler) UnmountDevice(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+// SetCoord sets map coordinates for an IDC
+func (h *DCIMHandler) SetCoord(c *gin.Context) {
+	var req SetCoordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 40001, err.Error())
+		return
+	}
+	if req.MapProvider == "" {
+		req.MapProvider = "amap"
+	}
+	coord := &LocationCoord{
+		CIID:        req.CIID,
+		Lat:         req.Lat,
+		Lng:         req.Lng,
+		Address:     req.Address,
+		MapProvider: req.MapProvider,
+	}
+	if err := coordRepo.SetCoord(coord); err != nil {
+		response.Error(c, 40002, err.Error())
+		return
+	}
+	response.Success(c, coord)
+}
+
+// ListCoords returns all map coordinates
+func (h *DCIMHandler) ListCoords(c *gin.Context) {
+	coords, err := coordRepo.ListCoords()
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, coords)
+}
+
+// GetRackLayout returns rack devices as an SVG-friendly array
+func (h *DCIMHandler) GetRackLayout(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	rack, err := h.svc.repo.GetRackByID(uint(id))
+	if err != nil {
+		response.Error(c, 404, "rack not found")
+		return
+	}
+	devices, err := h.svc.repo.GetRackDevices(uint(id))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, gin.H{
+		"rack":    rack,
+		"devices": devices,
+	})
 }
