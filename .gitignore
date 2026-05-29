@@ -1,0 +1,29 @@
+# Dependencies
+cmdb-api/vendor/
+cmdb-ui/node_modules/
+cmdb-ui/dist/
+
+# Worktrees
+.worktrees/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+
+# Claude config
+.claude/
+
+# Build
+cmdb-api/tmp/
+cmdb-api/bin/
+*.exe
