@@ -59,6 +59,11 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/dcim/racks/mount", dcimHandler.MountDevice)
 			authorized.DELETE("/dcim/racks/:rack_id/devices/:u_position", dcimHandler.UnmountDevice)
 
+			// DCIM coordinates
+			authorized.POST("/dcim/coords", dcimHandler.SetCoord)
+			authorized.GET("/dcim/coords", dcimHandler.ListCoords)
+			authorized.GET("/dcim/racks/:id/layout", dcimHandler.GetRackLayout)
+
 			// Discovery
 			authorized.POST("/discovery/rules", discoveryHandler.CreateRule)
 			authorized.GET("/discovery/rules", discoveryHandler.ListRules)
