@@ -12,6 +12,7 @@ import (
 	_ "cmdb-agent/plugins/tencent"
 	_ "cmdb-agent/plugins/huawei"
 	_ "cmdb-agent/plugins/aws"
+	_ "cmdb-agent/plugins/server"
 )
 
 func main() {
