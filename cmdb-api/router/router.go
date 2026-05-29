@@ -7,6 +7,7 @@ import (
 	"cmdb-api/modules/auth"
 	"cmdb-api/modules/core"
 	"cmdb-api/modules/dcim"
+	"cmdb-api/modules/discovery"
 	"cmdb-api/modules/ipam"
 )
 
@@ -16,6 +17,7 @@ func Setup(r *gin.Engine) {
 	coreHandler := core.NewCoreHandler()
 	ipamHandler := ipam.NewIPAMHandler()
 	dcimHandler := dcim.NewDCIMHandler()
+	discoveryHandler := discovery.NewDiscoveryHandler()
 	jwtMiddleware := middleware.JWTAuth(cfg)
 
 	api := r.Group("/api/v1")
@@ -23,6 +25,10 @@ func Setup(r *gin.Engine) {
 		// Public
 		api.POST("/auth/register", authHandler.Register)
 		api.POST("/auth/login", authHandler.Login)
+
+		// Agent endpoints (public, use X-Agent-Token)
+		api.POST("/discovery/agents/register", discoveryHandler.RegisterAgent)
+		api.POST("/discovery/agents/heartbeat", discoveryHandler.AgentHeartbeat)
 
 		// Protected
 		authorized := api.Group("", jwtMiddleware)
@@ -52,6 +58,12 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/dcim/racks", dcimHandler.CreateRack)
 			authorized.POST("/dcim/racks/mount", dcimHandler.MountDevice)
 			authorized.DELETE("/dcim/racks/:rack_id/devices/:u_position", dcimHandler.UnmountDevice)
+
+			// Discovery
+			authorized.POST("/discovery/rules", discoveryHandler.CreateRule)
+			authorized.GET("/discovery/rules", discoveryHandler.ListRules)
+			authorized.POST("/discovery/rules/execute", discoveryHandler.ExecuteRule)
+			authorized.GET("/discovery/agents", discoveryHandler.ListAgents)
 		}
 	}
 }

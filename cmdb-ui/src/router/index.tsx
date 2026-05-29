@@ -5,6 +5,8 @@ import CITypeList from '@/modules/core/CITypeList'
 import CIList from '@/modules/core/CIList'
 import SubnetList from '@/modules/ipam/SubnetList'
 import IDCList from '@/modules/dcim/IDCList'
+import RuleList from '@/modules/discovery/RuleList'
+import AgentList from '@/modules/discovery/AgentList'
 
 export default function AppRouter() {
   return (
@@ -17,6 +19,8 @@ export default function AppRouter() {
           <Route path="ci" element={<CIList />} />
           <Route path="ipam" element={<SubnetList />} />
           <Route path="dcim" element={<IDCList />} />
+          <Route path="discovery" element={<RuleList />} />
+          <Route path="agents" element={<AgentList />} />
         </Route>
         <Route path="*" element={<div>404</div>} />
       </Routes>
