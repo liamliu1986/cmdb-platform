@@ -118,3 +118,31 @@ func (h *CoreHandler) DeleteCI(c *gin.Context) {
 	}
 	response.Success(c, nil)
 }
+
+func (h *CoreHandler) SearchCI(c *gin.Context) {
+	var req CISearchRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.Error(c, 20001, err.Error())
+		return
+	}
+
+	builder := NewCISearchBuilder().
+		WithQuery(req.Q).
+		WithPagination(req.Page, req.PageSize).
+		WithSort(req.Sort)
+
+	cis, total, err := builder.Execute()
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+
+	response.Success(c, gin.H{
+		"list": cis,
+		"pagination": gin.H{
+			"page":      req.Page,
+			"page_size": req.PageSize,
+			"total":     total,
+		},
+	})
+}

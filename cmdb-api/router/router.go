@@ -33,6 +33,7 @@ func Setup(r *gin.Engine) {
 			authorized.GET("/ci/:id", coreHandler.GetCI)
 			authorized.PUT("/ci/:id", coreHandler.UpdateCI)
 			authorized.DELETE("/ci/:id", coreHandler.DeleteCI)
+			authorized.GET("/ci/s", coreHandler.SearchCI)
 		}
 	}
 }
