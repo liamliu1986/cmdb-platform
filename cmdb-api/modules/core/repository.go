@@ -2,9 +2,17 @@ package core
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"cmdb-api/database"
 )
+
+var allowedTables = map[string]bool{
+	"cmdb_core.cis":         true,
+	"cmdb_core.ci_types":    true,
+	"cmdb_discovery.rules":  true,
+	"cmdb_discovery.agents": true,
+}
 
 type CoreRepository struct{}
 
@@ -150,6 +158,9 @@ func (r *CoreRepository) CountCIsByStatus() ([]struct {
 }
 
 func (r *CoreRepository) CountTotal(table string) (int64, error) {
+	if !allowedTables[table] {
+		return 0, fmt.Errorf("invalid table name: %s", table)
+	}
 	var count int64
 	err := database.DB.Table(table).Count(&count).Error
 	return count, err

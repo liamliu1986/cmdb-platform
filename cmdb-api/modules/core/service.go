@@ -150,12 +150,30 @@ type DashboardStats struct {
 }
 
 func (s *CoreService) GetDashboardStats() (*DashboardStats, error) {
-	totalCI, _ := s.repo.CountTotal("cmdb_core.cis")
-	totalCIType, _ := s.repo.CountTotal("cmdb_core.ci_types")
-	totalRule, _ := s.repo.CountTotal("cmdb_discovery.rules")
-	totalAgent, _ := s.repo.CountTotal("cmdb_discovery.agents")
-	ciByType, _ := s.repo.CountCIsByType()
-	ciByStatus, _ := s.repo.CountCIsByStatus()
+	totalCI, err := s.repo.CountTotal("cmdb_core.cis")
+	if err != nil {
+		return nil, fmt.Errorf("count cis: %w", err)
+	}
+	totalCIType, err := s.repo.CountTotal("cmdb_core.ci_types")
+	if err != nil {
+		return nil, fmt.Errorf("count citypes: %w", err)
+	}
+	totalRule, err := s.repo.CountTotal("cmdb_discovery.rules")
+	if err != nil {
+		return nil, fmt.Errorf("count rules: %w", err)
+	}
+	totalAgent, err := s.repo.CountTotal("cmdb_discovery.agents")
+	if err != nil {
+		return nil, fmt.Errorf("count agents: %w", err)
+	}
+	ciByType, err := s.repo.CountCIsByType()
+	if err != nil {
+		return nil, fmt.Errorf("count ci by type: %w", err)
+	}
+	ciByStatus, err := s.repo.CountCIsByStatus()
+	if err != nil {
+		return nil, fmt.Errorf("count ci by status: %w", err)
+	}
 
 	return &DashboardStats{
 		TotalCI:     totalCI,
