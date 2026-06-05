@@ -1,12 +1,17 @@
-import { Layout, Menu } from 'antd'
+import { Layout, Menu, Button } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { HomeOutlined, BuildOutlined, DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined, RadarChartOutlined, RobotOutlined, ClusterOutlined, EnvironmentOutlined, DashboardOutlined } from '@ant-design/icons'
+import { HomeOutlined, BuildOutlined, DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined, RadarChartOutlined, RobotOutlined, ClusterOutlined, EnvironmentOutlined, DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
 
 export default function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    window.location.href = '/login'
+  }
 
   const menuItems = [
     { key: '/', icon: <HomeOutlined />, label: '仪表盘' },
@@ -25,8 +30,9 @@ export default function AppLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
+      <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h2 style={{ margin: 0 }}>CMDB</h2>
+        <Button icon={<LogoutOutlined />} onClick={handleLogout}>登出</Button>
       </Header>
       <Layout>
         <Sider theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
