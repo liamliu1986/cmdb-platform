@@ -23,6 +23,12 @@ func (r *CoreRepository) GetCITypeByID(id uint) (*CIType, error) {
 	return &ct, err
 }
 
+func (r *CoreRepository) GetCITypeWithAttributes(id uint) (*CIType, error) {
+	var ct CIType
+	err := database.DB.Preload("Attributes").First(&ct, id).Error
+	return &ct, err
+}
+
 func (r *CoreRepository) GetCITypeByName(name string) (*CIType, error) {
 	var ct CIType
 	err := database.DB.Where("name = ?", name).First(&ct).Error
@@ -106,4 +112,45 @@ func (r *CoreRepository) ListCIsByType(ciTypeID uint, page, pageSize int) ([]CI,
 // OperationLog
 func (r *CoreRepository) CreateOperationLog(log *OperationLog) error {
 	return database.DB.Create(log).Error
+}
+
+func (r *CoreRepository) CountCIsByType() ([]struct {
+	Name  string `json:"name"`
+	Value int64  `json:"value"`
+}, error) {
+	var results []struct {
+		Name  string `json:"name"`
+		Value int64  `json:"value"`
+	}
+	err := database.DB.Raw(`
+		SELECT ct.name, COUNT(c.id) as value
+		FROM cmdb_core.ci_types ct
+		LEFT JOIN cmdb_core.cis c ON c.ci_type_id = ct.id
+		GROUP BY ct.id, ct.name
+		ORDER BY value DESC
+	`).Scan(&results).Error
+	return results, err
+}
+
+func (r *CoreRepository) CountCIsByStatus() ([]struct {
+	Status string `json:"status"`
+	Value  int64  `json:"value"`
+}, error) {
+	var results []struct {
+		Status string `json:"status"`
+		Value  int64  `json:"value"`
+	}
+	err := database.DB.Raw(`
+		SELECT status, COUNT(*) as value
+		FROM cmdb_core.cis
+		GROUP BY status
+		ORDER BY value DESC
+	`).Scan(&results).Error
+	return results, err
+}
+
+func (r *CoreRepository) CountTotal(table string) (int64, error) {
+	var count int64
+	err := database.DB.Table(table).Count(&count).Error
+	return count, err
 }
