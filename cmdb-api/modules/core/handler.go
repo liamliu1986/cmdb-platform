@@ -38,7 +38,7 @@ func (h *CoreHandler) CreateCIType(c *gin.Context) {
 
 func (h *CoreHandler) GetCIType(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
-	ct, err := h.svc.GetCIType(uint(id))
+	ct, err := h.svc.GetCITypeWithAttributes(uint(id))
 	if err != nil {
 		response.Error(c, 404, "ci_type not found")
 		return
@@ -145,4 +145,13 @@ func (h *CoreHandler) SearchCI(c *gin.Context) {
 			"total":     total,
 		},
 	})
+}
+
+func (h *CoreHandler) DashboardStats(c *gin.Context) {
+	stats, err := h.svc.GetDashboardStats()
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, stats)
 }
