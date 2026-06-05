@@ -17,6 +17,7 @@ type CIType struct {
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+	Attributes   []Attribute    `gorm:"many2many:ci_type_attributes;" json:"attributes,omitempty"`
 }
 
 func (CIType) TableName() string { return "cmdb_core.ci_types" }
