@@ -35,6 +35,9 @@ func Setup(r *gin.Engine) {
 		// Protected
 		authorized := api.Group("", jwtMiddleware)
 		{
+			// Stats
+			authorized.GET("/stats/dashboard", coreHandler.DashboardStats)
+
 			// CIType
 			authorized.POST("/citypes", coreHandler.CreateCIType)
 			authorized.GET("/citypes", coreHandler.ListCITypes)
