@@ -13,6 +13,7 @@ import IDCMap from '@/modules/dcim/IDCMap'
 import Dashboard from '@/modules/dashboard/Dashboard'
 import RackView from '@/modules/dcim/RackView'
 import CIDetail from '@/modules/core/CIDetail'
+import MonitorDashboard from '@/modules/integration/MonitorDashboard'
 
 export default function AppRouter() {
   return (
@@ -31,6 +32,7 @@ export default function AppRouter() {
           <Route path="topology" element={<TopologyView />} />
           <Route path="idcmap" element={<IDCMap />} />
           <Route path="rack" element={<RackView />} />
+          <Route path="monitor" element={<MonitorDashboard />} />
           <Route path="ci/:id" element={<CIDetail />} />
         </Route>
         <Route path="*" element={<div>404</div>} />
