@@ -36,6 +36,10 @@ func (s *CoreService) GetCIType(id uint) (*CIType, error) {
 	return s.repo.GetCITypeByID(id)
 }
 
+func (s *CoreService) GetCITypeWithAttributes(id uint) (*CIType, error) {
+	return s.repo.GetCITypeWithAttributes(id)
+}
+
 func (s *CoreService) ListCITypes() ([]CIType, error) {
 	return s.repo.ListCITypes()
 }
@@ -128,4 +132,37 @@ func (s *CoreService) logOperation(targetType string, targetID uint, action, ope
 		CreatedAt:  time.Now(),
 	}
 	s.repo.CreateOperationLog(log)
+}
+
+type DashboardStats struct {
+	TotalCI     int64 `json:"total_ci"`
+	TotalCIType int64 `json:"total_citype"`
+	TotalRule   int64 `json:"total_rule"`
+	TotalAgent  int64 `json:"total_agent"`
+	CIByType    []struct {
+		Name  string `json:"name"`
+		Value int64  `json:"value"`
+	} `json:"ci_by_type"`
+	CIByStatus []struct {
+		Status string `json:"status"`
+		Value  int64  `json:"value"`
+	} `json:"ci_by_status"`
+}
+
+func (s *CoreService) GetDashboardStats() (*DashboardStats, error) {
+	totalCI, _ := s.repo.CountTotal("cmdb_core.cis")
+	totalCIType, _ := s.repo.CountTotal("cmdb_core.ci_types")
+	totalRule, _ := s.repo.CountTotal("cmdb_discovery.rules")
+	totalAgent, _ := s.repo.CountTotal("cmdb_discovery.agents")
+	ciByType, _ := s.repo.CountCIsByType()
+	ciByStatus, _ := s.repo.CountCIsByStatus()
+
+	return &DashboardStats{
+		TotalCI:     totalCI,
+		TotalCIType: totalCIType,
+		TotalRule:   totalRule,
+		TotalAgent:  totalAgent,
+		CIByType:    ciByType,
+		CIByStatus:  ciByStatus,
+	}, nil
 }
