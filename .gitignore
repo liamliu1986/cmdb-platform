@@ -27,3 +27,6 @@ Thumbs.db
 cmdb-api/tmp/
 cmdb-api/bin/
 *.exe
+cmdb-ui/*.tsbuildinfo
+cmdb-ui/vite.config.d.ts
+cmdb-ui/vite.config.js
