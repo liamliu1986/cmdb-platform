@@ -65,7 +65,10 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/dcim/idcs", dcimHandler.CreateIDC)
 			authorized.GET("/dcim/idcs", dcimHandler.ListIDCs)
 			authorized.POST("/dcim/rooms", dcimHandler.CreateRoom)
+			authorized.GET("/dcim/rooms", dcimHandler.ListRooms)
 			authorized.POST("/dcim/racks", dcimHandler.CreateRack)
+			authorized.GET("/dcim/racks", dcimHandler.ListRacks)
+			authorized.GET("/dcim/racks/:id", dcimHandler.GetRack)
 			authorized.POST("/dcim/racks/mount", dcimHandler.MountDevice)
 			authorized.DELETE("/dcim/racks/:rack_id/devices/:u_position", dcimHandler.UnmountDevice)
 
@@ -73,6 +76,7 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/dcim/coords", dcimHandler.SetCoord)
 			authorized.GET("/dcim/coords", dcimHandler.ListCoords)
 			authorized.GET("/dcim/racks/:id/layout", dcimHandler.GetRackLayout)
+			authorized.GET("/dcim/racks/:id/capacity", dcimHandler.GetRackCapacity)
 
 			// Discovery
 			authorized.POST("/discovery/rules", discoveryHandler.CreateRule)

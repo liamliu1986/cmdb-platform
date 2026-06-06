@@ -39,6 +39,10 @@ func (s *DCIMService) CreateRoom(req *CreateServerRoomRequest) (*ServerRoom, err
 	return room, nil
 }
 
+func (s *DCIMService) ListRoomsByIDC(idcID uint) ([]ServerRoom, error) {
+	return s.repo.ListRoomsByIDC(idcID)
+}
+
 func (s *DCIMService) CreateRack(req *CreateRackRequest) (*Rack, error) {
 	rack := &Rack{
 		Name:   req.Name,
@@ -54,6 +58,40 @@ func (s *DCIMService) CreateRack(req *CreateRackRequest) (*Rack, error) {
 	return rack, nil
 }
 
+func (s *DCIMService) ListRacksByRoom(roomID uint) ([]Rack, error) {
+	return s.repo.ListRacksByRoom(roomID)
+}
+
+func (s *DCIMService) GetRackByID(id uint) (*Rack, error) {
+	return s.repo.GetRackByID(id)
+}
+
+func (s *DCIMService) GetRackLayout(rackID uint) (*Rack, []RackLayout, error) {
+	rack, err := s.repo.GetRackByID(rackID)
+	if err != nil {
+		return nil, nil, errors.New("rack not found")
+	}
+	devices, err := s.repo.GetRackDevices(rackID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return rack, devices, nil
+}
+
+func (s *DCIMService) GetRackCapacity(rackID uint) (map[string]any, error) {
+	rack, devices, err := s.GetRackLayout(rackID)
+	if err != nil {
+		return nil, err
+	}
+	occupied := len(devices)
+	return map[string]any{
+		"total_u":    rack.TotalU,
+		"occupied":   occupied,
+		"available":  rack.TotalU - occupied,
+		"usage_rate": float64(occupied) / float64(rack.TotalU),
+	}, nil
+}
+
 func (s *DCIMService) MountDevice(req *MountDeviceRequest) error {
 	rack, err := s.repo.GetRackByID(req.RackID)
 	if err != nil {
@@ -61,6 +99,15 @@ func (s *DCIMService) MountDevice(req *MountDeviceRequest) error {
 	}
 	if req.UPosition < 1 || req.UPosition > rack.TotalU {
 		return errors.New("invalid U position")
+	}
+	existing, err := s.repo.GetRackDevices(req.RackID)
+	if err != nil {
+		return err
+	}
+	for _, d := range existing {
+		if d.UPosition == req.UPosition {
+			return errors.New("U position already occupied")
+		}
 	}
 	layout := &RackLayout{
 		RackID:     req.RackID,

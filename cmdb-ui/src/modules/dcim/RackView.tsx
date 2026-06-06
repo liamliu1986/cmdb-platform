@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Card, Tag, message } from 'antd'
-import { dcimApi } from '@/api/dcim'
 
 const statusColors: Record<string, string> = {
   active: '#52c41a',

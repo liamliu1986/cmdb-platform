@@ -54,6 +54,16 @@ func (h *DCIMHandler) CreateRoom(c *gin.Context) {
 	response.Success(c, room)
 }
 
+func (h *DCIMHandler) ListRooms(c *gin.Context) {
+	idcID, _ := strconv.ParseUint(c.Query("idc_id"), 10, 64)
+	rooms, err := h.svc.ListRoomsByIDC(uint(idcID))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, rooms)
+}
+
 func (h *DCIMHandler) CreateRack(c *gin.Context) {
 	var req CreateRackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -66,6 +76,36 @@ func (h *DCIMHandler) CreateRack(c *gin.Context) {
 		return
 	}
 	response.Success(c, rack)
+}
+
+func (h *DCIMHandler) ListRacks(c *gin.Context) {
+	roomID, _ := strconv.ParseUint(c.Query("room_id"), 10, 64)
+	racks, err := h.svc.ListRacksByRoom(uint(roomID))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, racks)
+}
+
+func (h *DCIMHandler) GetRack(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	rack, err := h.svc.GetRackByID(uint(id))
+	if err != nil {
+		response.Error(c, 404, "rack not found")
+		return
+	}
+	response.Success(c, rack)
+}
+
+func (h *DCIMHandler) GetRackCapacity(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	cap, err := h.svc.GetRackCapacity(uint(id))
+	if err != nil {
+		response.Error(c, 404, err.Error())
+		return
+	}
+	response.Success(c, cap)
 }
 
 func (h *DCIMHandler) MountDevice(c *gin.Context) {
