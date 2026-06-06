@@ -36,6 +36,8 @@ type Attribute struct {
 	IsComputed   bool      `gorm:"default:false" json:"is_computed"`
 	ComputeExpr  string    `gorm:"type:text" json:"compute_expr,omitempty"`
 	DefaultValue string    `gorm:"type:jsonb" json:"default_value,omitempty"`
+	IsReference  bool      `gorm:"default:false" json:"is_reference"`
+	RefTable     string    `gorm:"size:64" json:"ref_table,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 

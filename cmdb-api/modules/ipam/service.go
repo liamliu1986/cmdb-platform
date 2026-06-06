@@ -102,10 +102,6 @@ func (s *IPAMService) AllocateIP(req *AllocateIPRequest, operator string) (*IPAd
 	return nil, errors.New("no free IP available in subnet")
 }
 
-func (s *IPAMService) ReleaseIP(ipID uint) error {
-	return s.repo.UpdateIPStatus(ipID, "free", nil, "")
-}
-
 func (s *IPAMService) AllocateIPByID(ipID uint, operator string) (*IPAddress, error) {
 	ip, err := s.repo.GetIPByID(ipID)
 	if err != nil {
@@ -122,6 +118,105 @@ func (s *IPAMService) AllocateIPByID(ipID uint, operator string) (*IPAddress, er
 	return ip, nil
 }
 
+func (s *IPAMService) GetIPByID(id uint) (*IPAddress, error) {
+	return s.repo.GetIPByID(id)
+}
+
 func (s *IPAMService) GetAvailableIPsBySubnet(subnetID uint) ([]IPAddress, error) {
 	return s.repo.GetAvailableIPsBySubnet(subnetID)
+}
+
+// --- User-IP Assignment (Layer 1) ---
+
+func (s *IPAMService) AssignIPToUser(ipID, userID uint, assignedBy string) error {
+	ip, err := s.repo.GetIPByID(ipID)
+	if err != nil {
+		return errors.New("ip not found")
+	}
+	if ip.Status != "free" {
+		return errors.New("ip is not available for assignment")
+	}
+	ui := &UserIPAddress{
+		UserID:      userID,
+		IPAddressID: ipID,
+		AssignedBy:  assignedBy,
+	}
+	if err := s.repo.CreateUserIP(ui); err != nil {
+		return err
+	}
+	return s.repo.UpdateIPStatusFull(ipID, "reserved", nil, "")
+}
+
+func (s *IPAMService) UnassignIPFromUser(ipID, userID uint) error {
+	ip, err := s.repo.GetIPByID(ipID)
+	if err != nil {
+		return errors.New("ip not found")
+	}
+	if ip.Status == "allocated" {
+		return errors.New("cannot unassign ip currently allocated to a ci")
+	}
+	if err := s.repo.DeleteUserIP(userID, ipID); err != nil {
+		return err
+	}
+	return s.repo.UpdateIPStatusFull(ipID, "free", nil, "")
+}
+
+func (s *IPAMService) GetUserAssignedIPs(userID uint) ([]IPAddress, error) {
+	return s.repo.ListUserIPsWithDetails(userID)
+}
+
+func (s *IPAMService) IsIPAssignedToUser(ipID, userID uint) (bool, error) {
+	ui, err := s.repo.GetUserIPByIPAddressID(ipID)
+	if err != nil {
+		return false, nil // not found = not assigned
+	}
+	return ui.UserID == userID, nil
+}
+
+// --- IP-CI Binding (Layer 2) ---
+
+func (s *IPAMService) AllocateIPForCI(ipID, ciID, userID uint, operator string) error {
+	ip, err := s.repo.GetIPByID(ipID)
+	if err != nil {
+		return errors.New("ip not found")
+	}
+	if ip.Status != "reserved" {
+		return errors.New("ip must be reserved to user before allocating to ci")
+	}
+	if ip.CIID != nil && *ip.CIID != 0 && *ip.CIID != ciID {
+		return errors.New("ip is already allocated to another ci")
+	}
+	// Verify ownership
+	assigned, err := s.IsIPAssignedToUser(ipID, userID)
+	if err != nil {
+		return err
+	}
+	if !assigned {
+		return errors.New("ip is not assigned to this user")
+	}
+	return s.repo.UpdateIPStatusFull(ipID, "allocated", &ciID, operator)
+}
+
+func (s *IPAMService) ReleaseIPFromCI(ipID uint) error {
+	ip, err := s.repo.GetIPByID(ipID)
+	if err != nil {
+		return errors.New("ip not found")
+	}
+	if ip.Status != "allocated" {
+		return errors.New("ip is not allocated to a ci")
+	}
+	// Return to reserved status (user pool)
+	return s.repo.UpdateIPStatusFull(ipID, "reserved", nil, "")
+}
+
+// ReleaseIP rejects if the IP is bound to a CI.
+func (s *IPAMService) ReleaseIP(ipID uint) error {
+	ip, err := s.repo.GetIPByID(ipID)
+	if err != nil {
+		return errors.New("ip not found")
+	}
+	if ip.CIID != nil && *ip.CIID != 0 {
+		return errors.New("cannot release ip bound to a ci")
+	}
+	return s.repo.UpdateIPStatusFull(ipID, "free", nil, "")
 }

@@ -49,3 +49,16 @@ type IPAMHistory struct {
 }
 
 func (IPAMHistory) TableName() string { return "cmdb_ipam.histories" }
+
+// UserIPAddress 用户被分配的IP地址（用户个人IP池）
+type UserIPAddress struct {
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	UserID      uint           `gorm:"not null;index" json:"user_id"`
+	IPAddressID uint           `gorm:"not null;uniqueIndex" json:"ip_address_id"`
+	AssignedBy  string         `gorm:"size:64" json:"assigned_by"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
+}
+
+func (UserIPAddress) TableName() string { return "cmdb_ipam.user_ip_addresses" }

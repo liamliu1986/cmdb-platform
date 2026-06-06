@@ -1,6 +1,7 @@
 package core
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -67,7 +68,12 @@ func (h *CoreHandler) CreateCI(c *gin.Context) {
 	if operator != nil {
 		op = operator.(string)
 	}
-	ci, err := h.svc.CreateCI(&req, op)
+	userID, _ := c.Get("user_id")
+	uid := uint(0)
+	if userID != nil {
+		uid = userID.(uint)
+	}
+	ci, err := h.svc.CreateCI(&req, uid, op)
 	if err != nil {
 		response.Error(c, 20003, err.Error())
 		return
@@ -82,7 +88,49 @@ func (h *CoreHandler) GetCI(c *gin.Context) {
 		response.Error(c, 404, "ci not found")
 		return
 	}
-	response.Success(c, ci)
+
+	// Parse attr_values for response
+	var attrValues map[string]any
+	_ = json.Unmarshal([]byte(ci.AttrValuesRaw), &attrValues)
+
+	// Resolve reference attributes (IP addresses)
+	ct, _ := h.svc.GetCITypeWithAttributes(ci.CITypeID)
+	if ct != nil {
+		for _, attr := range ct.Attributes {
+			if !attr.IsReference || attr.RefTable != "cmdb_ipam.ip_addresses" {
+				continue
+			}
+			val, ok := attrValues[attr.Name]
+			if !ok || val == nil {
+				continue
+			}
+			var ipID uint
+			switch v := val.(type) {
+			case float64:
+				ipID = uint(v)
+			case int:
+				ipID = uint(v)
+			case uint:
+				ipID = v
+			}
+			if ipID > 0 {
+				ip, _ := h.svc.ResolveIPReference(ipID)
+				if ip != nil {
+					attrValues[attr.Name+"_resolved"] = ip
+				}
+			}
+		}
+	}
+
+	response.Success(c, gin.H{
+		"id":          ci.ID,
+		"ci_type_id":  ci.CITypeID,
+		"status":      ci.Status,
+		"attr_values": attrValues,
+		"updated_by":  ci.UpdatedBy,
+		"created_at":  ci.CreatedAt,
+		"updated_at":  ci.UpdatedAt,
+	})
 }
 
 func (h *CoreHandler) UpdateCI(c *gin.Context) {
@@ -97,7 +145,12 @@ func (h *CoreHandler) UpdateCI(c *gin.Context) {
 	if operator != nil {
 		op = operator.(string)
 	}
-	ci, err := h.svc.UpdateCI(uint(id), req.AttrValues, op)
+	userID, _ := c.Get("user_id")
+	uid := uint(0)
+	if userID != nil {
+		uid = userID.(uint)
+	}
+	ci, err := h.svc.UpdateCI(uint(id), uid, req.AttrValues, op)
 	if err != nil {
 		response.Error(c, 20004, err.Error())
 		return

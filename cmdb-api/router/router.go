@@ -54,9 +54,16 @@ func Setup(r *gin.Engine) {
 			authorized.POST("/ipam/subnets", ipamHandler.CreateSubnet)
 			authorized.GET("/ipam/subnets", ipamHandler.ListSubnets)
 			authorized.GET("/ipam/subnets/:id/ips", ipamHandler.ListIPsBySubnet)
+			authorized.GET("/ipam/subnets/:id/ips/available", ipamHandler.ListAvailableIPs)
+			authorized.GET("/ipam/ips/:id", ipamHandler.GetIP)
 			authorized.POST("/ipam/ips/allocate", ipamHandler.AllocateIP)
 			authorized.POST("/ipam/ips/:id/allocate-by-id", ipamHandler.AllocateIPByID)
 			authorized.POST("/ipam/ips/:id/release", ipamHandler.ReleaseIP)
+
+			// IPAM User-IP Assignment
+			authorized.POST("/ipam/users/:user_id/ips", ipamHandler.AssignIPToUser)
+			authorized.DELETE("/ipam/users/:user_id/ips/:ip_address_id", ipamHandler.UnassignIPFromUser)
+			authorized.GET("/ipam/users/:user_id/ips", ipamHandler.GetUserAssignedIPs)
 
 			// Auth permissions
 			authorized.GET("/auth/permissions/subnets", authHandler.GetUserSubnetPermissions)

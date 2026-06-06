@@ -26,8 +26,17 @@ export default function CIDetail() {
   if (!ci) return <Alert type="error" message="CI not found" />
 
   const attrEntries = ci.attr_values
-    ? Object.entries(ci.attr_values)
+    ? Object.entries(ci.attr_values).filter(([k]) => !k.endsWith('_resolved'))
     : []
+
+  const renderAttrValue = (key: string, value: any) => {
+    const resolvedKey = key + '_resolved'
+    if (ci.attr_values && ci.attr_values[resolvedKey]) {
+      const resolved = ci.attr_values[resolvedKey]
+      return `${resolved.ip || resolved.name || JSON.stringify(resolved)} (ID: ${value})`
+    }
+    return String(value)
+  }
 
   return (
     <div>
@@ -43,7 +52,10 @@ export default function CIDetail() {
           <div style={{ marginTop: 16 }}>
             <h4>属性值</h4>
             <Table
-              dataSource={attrEntries.map(([k, v]) => ({ key: k, value: String(v) }))}
+              dataSource={attrEntries.map(([k, v]) => ({
+                key: k,
+                value: renderAttrValue(k, v),
+              }))}
               columns={[
                 { title: '属性', dataIndex: 'key', width: 200 },
                 { title: '值', dataIndex: 'value' },

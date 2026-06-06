@@ -110,3 +110,64 @@ func (h *IPAMHandler) AllocateIPByID(c *gin.Context) {
 	}
 	response.Success(c, ip)
 }
+
+func (h *IPAMHandler) GetIP(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	ip, err := h.svc.repo.GetIPByID(uint(id))
+	if err != nil {
+		response.Error(c, 404, "ip not found")
+		return
+	}
+	response.Success(c, ip)
+}
+
+func (h *IPAMHandler) ListAvailableIPs(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	ips, err := h.svc.GetAvailableIPsBySubnet(uint(id))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, ips)
+}
+
+// --- User-IP Assignment Handlers ---
+
+func (h *IPAMHandler) AssignIPToUser(c *gin.Context) {
+	userID, _ := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	var req AssignIPToUserRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.Error(c, 30001, err.Error())
+		return
+	}
+	operator, _ := c.Get("username")
+	op := ""
+	if operator != nil {
+		op = operator.(string)
+	}
+	if err := h.svc.AssignIPToUser(req.IPAddressID, uint(userID), op); err != nil {
+		response.Error(c, 30005, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+func (h *IPAMHandler) UnassignIPFromUser(c *gin.Context) {
+	userID, _ := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	ipAddressID, _ := strconv.ParseUint(c.Param("ip_address_id"), 10, 64)
+	if err := h.svc.UnassignIPFromUser(uint(ipAddressID), uint(userID)); err != nil {
+		response.Error(c, 30006, err.Error())
+		return
+	}
+	response.Success(c, nil)
+}
+
+func (h *IPAMHandler) GetUserAssignedIPs(c *gin.Context) {
+	userID, _ := strconv.ParseUint(c.Param("user_id"), 10, 64)
+	ips, err := h.svc.GetUserAssignedIPs(uint(userID))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, ips)
+}

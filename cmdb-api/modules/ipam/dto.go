@@ -14,3 +14,7 @@ type AllocateIPRequest struct {
 type ReleaseIPRequest struct {
 	IPID uint `json:"ip_id" binding:"required"`
 }
+
+type AssignIPToUserRequest struct {
+	IPAddressID uint `json:"ip_address_id" binding:"required"`
+}
