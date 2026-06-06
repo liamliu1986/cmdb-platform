@@ -4,6 +4,9 @@ import AppLayout from '@/layouts/AppLayout'
 import CITypeList from '@/modules/core/CITypeList'
 import CIList from '@/modules/core/CIList'
 import SubnetList from '@/modules/ipam/SubnetList'
+import SubnetTree from '@/modules/ipam/SubnetTree'
+import IPList from '@/modules/ipam/IPList'
+import IPAllocate from '@/modules/ipam/IPAllocate'
 import IDCList from '@/modules/dcim/IDCList'
 import RuleList from '@/modules/discovery/RuleList'
 import AgentList from '@/modules/discovery/AgentList'
@@ -25,6 +28,9 @@ export default function AppRouter() {
           <Route path="citypes" element={<CITypeList />} />
           <Route path="ci" element={<CIList />} />
           <Route path="ipam" element={<SubnetList />} />
+          <Route path="ipam/tree" element={<SubnetTree />} />
+          <Route path="ipam/ips" element={<IPList />} />
+          <Route path="ipam/allocate" element={<IPAllocate />} />
           <Route path="dcim" element={<IDCList />} />
           <Route path="discovery" element={<RuleList />} />
           <Route path="agents" element={<AgentList />} />

@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Table, Button, Card, message, Modal, Form, Input, Select } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { Table, Button, Card, message, Modal, Form, Input, Select, Space } from 'antd'
+import { ClusterOutlined, EyeOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { ipamApi } from '@/api/ipam'
 
 export default function SubnetList() {
+  const navigate = useNavigate()
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -42,12 +45,33 @@ export default function SubnetList() {
   return (
     <Card
       title="子网管理"
-      extra={<Button type="primary" onClick={() => setModalOpen(true)}>新建子网</Button>}
+      extra={
+        <Space>
+          <Button icon={<ClusterOutlined />} onClick={() => navigate('/ipam/tree')}>
+            拓扑视图
+          </Button>
+          <Button type="primary" onClick={() => setModalOpen(true)}>新建子网</Button>
+        </Space>
+      }
     >
       <Table dataSource={data} columns={[
         { title: '名称', dataIndex: 'name' },
         { title: 'CIDR', dataIndex: 'cidr' },
         { title: '状态', dataIndex: 'status' },
+        {
+          title: '操作',
+          key: 'action',
+          render: (_: any, record: any) => (
+            <Space>
+              <Button size="small" icon={<EyeOutlined />} onClick={() => navigate(`/ipam/ips?subnet_id=${record.id}`)}>
+                查看 IP
+              </Button>
+              <Button size="small" icon={<ThunderboltOutlined />} onClick={() => navigate(`/ipam/allocate?subnet_id=${record.id}`)}>
+                分配 IP
+              </Button>
+            </Space>
+          ),
+        },
       ]} loading={loading} rowKey="id" />
 
       <Modal
