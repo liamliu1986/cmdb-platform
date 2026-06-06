@@ -48,7 +48,13 @@ func (r *IPAMRepository) GetIPByID(id uint) (*IPAddress, error) {
 
 func (r *IPAMRepository) ListIPsBySubnet(subnetID uint) ([]IPAddress, error) {
 	var ips []IPAddress
-	err := database.DB.Where("subnet_id = ?", subnetID).Find(&ips).Error
+	err := database.DB.Where("subnet_id = ?", subnetID).Order("id").Find(&ips).Error
+	return ips, err
+}
+
+func (r *IPAMRepository) GetAvailableIPsBySubnet(subnetID uint) ([]IPAddress, error) {
+	var ips []IPAddress
+	err := database.DB.Where("subnet_id = ? AND status = ?", subnetID, "free").Order("id").Find(&ips).Error
 	return ips, err
 }
 

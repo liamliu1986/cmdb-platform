@@ -7,11 +7,16 @@ import (
 )
 
 type IPAMHandler struct {
-	svc *IPAMService
+	svc             *IPAMService
+	resourceCreator func(subnetID uint, subnetName string) error
 }
 
 func NewIPAMHandler() *IPAMHandler {
 	return &IPAMHandler{svc: NewIPAMService()}
+}
+
+func (h *IPAMHandler) SetResourceCreator(fn func(subnetID uint, subnetName string) error) {
+	h.resourceCreator = fn
 }
 
 func (h *IPAMHandler) CreateSubnet(c *gin.Context) {
@@ -24,6 +29,9 @@ func (h *IPAMHandler) CreateSubnet(c *gin.Context) {
 	if err != nil {
 		response.Error(c, 30002, err.Error())
 		return
+	}
+	if h.resourceCreator != nil {
+		_ = h.resourceCreator(subnet.ID, subnet.Name)
 	}
 	response.Success(c, subnet)
 }
@@ -69,4 +77,36 @@ func (h *IPAMHandler) ReleaseIP(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+func (h *IPAMHandler) ListIPsBySubnet(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	status := c.Query("status")
+	var ips []IPAddress
+	var err error
+	if status == "free" {
+		ips, err = h.svc.GetAvailableIPsBySubnet(uint(id))
+	} else {
+		ips, err = h.svc.repo.ListIPsBySubnet(uint(id))
+	}
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, ips)
+}
+
+func (h *IPAMHandler) AllocateIPByID(c *gin.Context) {
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	operator, _ := c.Get("username")
+	op := ""
+	if operator != nil {
+		op = operator.(string)
+	}
+	ip, err := h.svc.AllocateIPByID(uint(id), op)
+	if err != nil {
+		response.Error(c, 30003, err.Error())
+		return
+	}
+	response.Success(c, ip)
 }

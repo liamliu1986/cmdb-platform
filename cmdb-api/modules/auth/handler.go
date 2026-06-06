@@ -41,3 +41,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 	response.Success(c, resp)
 }
+
+func (h *AuthHandler) GetUserSubnetPermissions(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		response.Error(c, 401, "unauthorized")
+		return
+	}
+	ids, err := h.svc.GetUserPermittedSubnets(userID.(uint))
+	if err != nil {
+		response.Error(c, 500, err.Error())
+		return
+	}
+	response.Success(c, gin.H{"subnet_ids": ids})
+}

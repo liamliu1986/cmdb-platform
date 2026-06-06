@@ -23,6 +23,10 @@ func main() {
     }
 
     auth.Migrate()
+    authSvc := auth.NewAuthService(cfg)
+    if err := authSvc.InitIAMResources(); err != nil {
+        panic("Failed to init IAM resources: " + err.Error())
+    }
     core.Migrate()
     core.InitBuiltinCITypes()
     dcim.Migrate()
