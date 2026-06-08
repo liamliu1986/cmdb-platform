@@ -1,0 +1,50 @@
+# Staging Environment Configuration
+namespace: idc-test
+
+# API Backend Configuration
+api:
+  image: idc-test-harbor.neuedu.com/cmdb/cmdb-api
+  replicaCount: 1
+  service:
+    port: 8080
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+  env:
+    DB_HOST: "postgres-postgresql.db.svc.cluster.local"
+    DB_PORT: "5432"
+    DB_NAME: "cmdb"
+    DB_USER: "cmdb"
+    DB_PASSWORD: "cmdb123"
+    REDIS_HOST: "redis-master.db.svc.cluster.local"
+    REDIS_PORT: "6379"
+    REDIS_DB: "0"
+    SERVER_PORT: "8080"
+
+# Frontend Configuration
+ui:
+  image: idc-test-harbor.neuedu.com/cmdb/cmdb-ui
+  replicaCount: 1
+  service:
+    port: 80
+  resources:
+    limits:
+      cpu: 200m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  className: nginx
+  host: cmdb-staging.neuedu.com
+  apiPath: /api
+  uiPath: /
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"

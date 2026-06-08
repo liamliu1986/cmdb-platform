@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cmdb-api
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: cmdb-api
+    tier: backend
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      app: cmdb-api
+  template:
+    metadata:
+      labels:
+        app: cmdb-api
+        tier: backend
+    spec:
+      containers:
+        - name: cmdb-api
+          image: {{ .Values.api.image }}:{{ .Values.api.tag | default "latest" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.service.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+          env:
+            {{- range $key, $value := .Values.api.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1/auth/login
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/v1/auth/login
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
