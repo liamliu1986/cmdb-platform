@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"cmdb-api/database"
 	"cmdb-api/modules/ipam"
 )
 
@@ -107,7 +108,7 @@ func (s *CoreService) CreateCI(req *CreateCIRequest, userID uint, operator strin
 		}
 	}
 
-	// Process reference attributes before creating CI
+	// Validate all reference attributes before creating CI
 	for _, attr := range ct.Attributes {
 		if !attr.IsReference || attr.RefTable != "cmdb_ipam.ip_addresses" {
 			continue
@@ -139,17 +140,29 @@ func (s *CoreService) CreateCI(req *CreateCIRequest, userID uint, operator strin
 		req.AttrValues[attr.Name] = ipID
 	}
 
+	// Start transaction
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Use tx-aware repo
+	repoWithTx := s.repo.WithTx(tx)
+
 	raw, _ := json.Marshal(req.AttrValues)
 	ci := &CI{
 		CITypeID:      req.CITypeID,
 		AttrValuesRaw: string(raw),
 		UpdatedBy:     operator,
 	}
-	if err := s.repo.CreateCI(ci); err != nil {
+	if err := repoWithTx.CreateCI(ci); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
-	// After CI created, bind IPs
+	// Bind IPs within same transaction
 	for _, attr := range ct.Attributes {
 		if !attr.IsReference || attr.RefTable != "cmdb_ipam.ip_addresses" {
 			continue
@@ -160,8 +173,15 @@ func (s *CoreService) CreateCI(req *CreateCIRequest, userID uint, operator strin
 		}
 		ipID := parseUintFromInterface(val)
 		if ipID > 0 {
-			_ = s.ipamSvc.AllocateIPForCI(ipID, ci.ID, userID, operator)
+			if err := s.ipamSvc.WithTx(tx).AllocateIPForCI(ipID, ci.ID, userID, operator); err != nil {
+				tx.Rollback()
+				return nil, fmt.Errorf("failed to allocate ip for attribute '%s': %w", attr.Name, err)
+			}
 		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
 	}
 
 	s.logOperation("ci", ci.ID, "create", operator, nil, ci)
@@ -187,7 +207,18 @@ func (s *CoreService) UpdateCI(id, userID uint, attrValues map[string]any, opera
 	var oldAttrValues map[string]any
 	_ = json.Unmarshal([]byte(oldCI.AttrValuesRaw), &oldAttrValues)
 
-	// Process reference attributes
+	// Start transaction
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Use tx-aware repo
+	repoWithTx := s.repo.WithTx(tx)
+
+	// Process reference attributes within transaction
 	for _, attr := range ct.Attributes {
 		if !attr.IsReference || attr.RefTable != "cmdb_ipam.ip_addresses" {
 			continue
@@ -200,7 +231,10 @@ func (s *CoreService) UpdateCI(id, userID uint, attrValues map[string]any, opera
 		if oldVal != nil {
 			oldIPID := parseUintFromInterface(oldVal)
 			if oldIPID > 0 && (!hasNew || newVal == nil || parseUintFromInterface(newVal) != oldIPID) {
-				_ = s.ipamSvc.ReleaseIPFromCI(oldIPID)
+				if err := s.ipamSvc.WithTx(tx).ReleaseIPFromCI(oldIPID); err != nil {
+					tx.Rollback()
+					return nil, fmt.Errorf("failed to release old ip for attribute '%s': %w", attr.Name, err)
+				}
 			}
 		}
 
@@ -208,20 +242,32 @@ func (s *CoreService) UpdateCI(id, userID uint, attrValues map[string]any, opera
 		if hasNew && newVal != nil {
 			newIPID := parseUintFromInterface(newVal)
 			if newIPID > 0 {
-				assigned, _ := s.ipamSvc.IsIPAssignedToUser(newIPID, userID)
+				assigned, err := s.ipamSvc.IsIPAssignedToUser(newIPID, userID)
+				if err != nil {
+					tx.Rollback()
+					return nil, err
+				}
 				if !assigned {
+					tx.Rollback()
 					return nil, fmt.Errorf("ip for attribute '%s' is not assigned to user", attr.Name)
 				}
-				if err := s.ipamSvc.AllocateIPForCI(newIPID, id, userID, operator); err != nil {
+				if err := s.ipamSvc.WithTx(tx).AllocateIPForCI(newIPID, id, userID, operator); err != nil {
+					tx.Rollback()
 					return nil, fmt.Errorf("failed to allocate ip for attribute '%s': %w", attr.Name, err)
 				}
 			}
 		}
 	}
 
-	if err := s.repo.UpdateCI(id, attrValues); err != nil {
+	if err := repoWithTx.UpdateCI(id, attrValues); err != nil {
+		tx.Rollback()
 		return nil, err
 	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
 	newCI, _ := s.repo.GetCIByID(id)
 	s.logOperation("ci", id, "update", operator, oldCI, newCI)
 	return newCI, nil
@@ -238,6 +284,16 @@ func (s *CoreService) DeleteCI(id uint, operator string) error {
 	_ = json.Unmarshal([]byte(ci.AttrValuesRaw), &attrValues)
 
 	ct, _ := s.repo.GetCITypeWithAttributes(ci.CITypeID)
+
+	// Start transaction
+	tx := database.DB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Release IPs within transaction
 	for _, attr := range ct.Attributes {
 		if !attr.IsReference || attr.RefTable != "cmdb_ipam.ip_addresses" {
 			continue
@@ -248,13 +304,24 @@ func (s *CoreService) DeleteCI(id uint, operator string) error {
 		}
 		ipID := parseUintFromInterface(val)
 		if ipID > 0 {
-			_ = s.ipamSvc.ReleaseIPFromCI(ipID)
+			if err := s.ipamSvc.WithTx(tx).ReleaseIPFromCI(ipID); err != nil {
+				tx.Rollback()
+				return fmt.Errorf("failed to release ip for attribute '%s': %w", attr.Name, err)
+			}
 		}
 	}
 
-	if err := s.repo.DeleteCI(id); err != nil {
+	// Use tx-aware repo for delete
+	repoWithTx := s.repo.WithTx(tx)
+	if err := repoWithTx.DeleteCI(id); err != nil {
+		tx.Rollback()
 		return err
 	}
+
+	if err := tx.Commit().Error; err != nil {
+		return err
+	}
+
 	s.logOperation("ci", id, "delete", operator, ci, nil)
 	return nil
 }

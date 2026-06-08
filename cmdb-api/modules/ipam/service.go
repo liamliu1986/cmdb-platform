@@ -3,6 +3,8 @@ package ipam
 import (
 	"errors"
 	"net"
+
+	"gorm.io/gorm"
 )
 
 type IPAMService struct {
@@ -11,6 +13,10 @@ type IPAMService struct {
 
 func NewIPAMService() *IPAMService {
 	return &IPAMService{repo: NewIPAMRepository()}
+}
+
+func (s *IPAMService) WithTx(tx *gorm.DB) *IPAMService {
+	return &IPAMService{repo: s.repo.WithTx(tx)}
 }
 
 func (s *IPAMService) CreateSubnet(req *CreateSubnetRequest) (*Subnet, error) {
