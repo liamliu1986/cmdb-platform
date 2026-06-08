@@ -2,11 +2,14 @@ package core
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"cmdb-api/database"
 	"gorm.io/gorm"
 )
+
+var safeSortField = regexp.MustCompile("^[a-zA-Z0-9_]+$")
 
 type CISearchBuilder struct {
 	db       *gorm.DB
@@ -105,6 +108,9 @@ func (b *CISearchBuilder) Build() (*gorm.DB, error) {
 		if strings.HasPrefix(b.sort, "-") {
 			direction = "DESC"
 			field = strings.TrimPrefix(b.sort, "-")
+		}
+		if !safeSortField.MatchString(field) {
+			return nil, fmt.Errorf("invalid sort field: %s", field)
 		}
 		db = db.Order(fmt.Sprintf("attr_values->>'%s' %s NULLS LAST", field, direction))
 	}

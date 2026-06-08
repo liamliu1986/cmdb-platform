@@ -78,59 +78,15 @@ func (r *AuthRepository) GetUserRoles(userID uint) ([]Role, error) {
 	return roles, err
 }
 
-// GetOrCreateResourceType finds or creates a resource type by name
-func (r *AuthRepository) GetOrCreateResourceType(name, description string) (*ResourceType, error) {
-	var rt ResourceType
-	err := database.DB.Where("name = ?", name).First(&rt).Error
-	if err == nil {
-		return &rt, nil
-	}
-	rt = ResourceType{Name: name, Description: description}
-	if err := database.DB.Create(&rt).Error; err != nil {
-		return nil, err
-	}
-	return &rt, nil
-}
-
-// GetOrCreatePermission finds or creates a permission
-func (r *AuthRepository) GetOrCreatePermission(name string, resourceTypeID uint) (*Permission, error) {
-	var p Permission
-	err := database.DB.Where("name = ? AND resource_type_id = ?", name, resourceTypeID).First(&p).Error
-	if err == nil {
-		return &p, nil
-	}
-	p = Permission{Name: name, ResourceTypeID: resourceTypeID}
-	if err := database.DB.Create(&p).Error; err != nil {
-		return nil, err
-	}
-	return &p, nil
-}
-
-// CreateResource creates a resource record
-func (r *AuthRepository) CreateResource(res *Resource) error {
-	return database.DB.Create(res).Error
-}
-
 // CheckRolePermission checks if a role has a specific permission on a resource
-func (r *AuthRepository) CheckRolePermission(roleID uint, resourceID uint, permissionID uint) (bool, error) {
+func (r *AuthRepository) CheckRolePermission(roleID uint, resourceName string, permissionName string) (bool, error) {
 	var count int64
-	err := database.DB.Model(&RolePermission{}).
-		Where("role_id = ? AND resource_id = ? AND permission_id = ?", roleID, resourceID, permissionID).
+	err := database.DB.Table("cmdb_auth.role_permissions").
+		Joins("JOIN cmdb_auth.resources ON resources.id = role_permissions.resource_id").
+		Joins("JOIN cmdb_auth.permissions ON permissions.id = role_permissions.permission_id").
+		Where("role_permissions.role_id = ?", roleID).
+		Where("resources.name = ?", resourceName).
+		Where("permissions.name = ?", permissionName).
 		Count(&count).Error
 	return count > 0, err
-}
-
-// GetUserPermittedResources returns resources of a specific type that the user has permission on
-func (r *AuthRepository) GetUserPermittedResources(userID uint, resourceTypeName string, permissionName string) ([]Resource, error) {
-	var resources []Resource
-	err := database.DB.
-		Joins("JOIN cmdb_auth.resource_types ON resource_types.id = resources.resource_type_id").
-		Joins("JOIN cmdb_auth.role_permissions ON role_permissions.resource_id = resources.id").
-		Joins("JOIN cmdb_auth.permissions ON permissions.id = role_permissions.permission_id").
-		Joins("JOIN cmdb_auth.roles ON roles.id = role_permissions.role_id").
-		Joins("JOIN cmdb_auth.user_roles ON user_roles.role_id = roles.id").
-		Where("user_roles.user_id = ? AND resource_types.name = ? AND permissions.name = ?", userID, resourceTypeName, permissionName).
-		Distinct().
-		Find(&resources).Error
-	return resources, err
 }

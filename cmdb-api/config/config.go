@@ -32,20 +32,6 @@ func Load() *Config {
     viper.SetDefault("REDIS_DB", 0)
     viper.SetDefault("JWT_EXPIRE_HOURS", 24)
 
-    // Bind env vars so viper.Unmarshal can read them correctly
-    viper.BindEnv("SERVER_PORT")
-    viper.BindEnv("DB_HOST")
-    viper.BindEnv("DB_PORT")
-    viper.BindEnv("DB_USER")
-    viper.BindEnv("DB_PASSWORD")
-    viper.BindEnv("DB_NAME")
-    viper.BindEnv("REDIS_HOST")
-    viper.BindEnv("REDIS_PORT")
-    viper.BindEnv("REDIS_PASSWORD")
-    viper.BindEnv("REDIS_DB")
-    viper.BindEnv("JWT_SECRET")
-    viper.BindEnv("JWT_EXPIRE_HOURS")
-
     var cfg Config
     if err := viper.Unmarshal(&cfg); err != nil {
         log.Fatal("Failed to load config:", err)

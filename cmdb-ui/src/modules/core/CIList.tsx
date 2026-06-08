@@ -36,24 +36,15 @@ export default function CIList() {
 
   useEffect(() => { fetchCITypes(); fetchData() }, [])
 
-  const handleCITypeChange = async (typeId: number) => {
+  const handleCITypeChange = (typeId: number) => {
     const ct = ciTypes.find((t: any) => t.id === typeId)
     setSelectedCIType(ct)
-    try {
-      const res: any = await coreApi.getCIType(typeId)
-      if (res.code === 0 && res.data?.attributes) {
-        setCITypeAttrs(res.data.attributes.map((attr: any) => ({
-          name: attr.name,
-          alias: attr.alias,
-          value_type: attr.value_type,
-          is_required: attr.is_required ?? false,
-        })))
-      } else {
-        setCITypeAttrs([])
-      }
-    } catch {
-      setCITypeAttrs([])
-    }
+    // For now, use mock attributes. In a real implementation,
+    // you would fetch attributes from the backend.
+    setCITypeAttrs([
+      { name: 'name', alias: '名称', value_type: 'text', is_required: true },
+      { name: 'description', alias: '描述', value_type: 'text', is_required: false },
+    ])
     form.resetFields()
   }
 

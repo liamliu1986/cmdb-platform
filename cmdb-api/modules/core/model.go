@@ -17,7 +17,6 @@ type CIType struct {
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
-	Attributes   []Attribute    `gorm:"many2many:ci_type_attributes;" json:"attributes,omitempty"`
 }
 
 func (CIType) TableName() string { return "cmdb_core.ci_types" }
@@ -36,8 +35,6 @@ type Attribute struct {
 	IsComputed   bool      `gorm:"default:false" json:"is_computed"`
 	ComputeExpr  string    `gorm:"type:text" json:"compute_expr,omitempty"`
 	DefaultValue string    `gorm:"type:jsonb" json:"default_value,omitempty"`
-	IsReference  bool      `gorm:"default:false" json:"is_reference"`
-	RefTable     string    `gorm:"size:64" json:"ref_table,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 

@@ -18,8 +18,6 @@ type CreateAttributeRequest struct {
 	IsPassword  bool   `json:"is_password"`
 	IsComputed  bool   `json:"is_computed"`
 	ComputeExpr string `json:"compute_expr"`
-	IsReference bool   `json:"is_reference"`
-	RefTable    string `json:"ref_table"`
 }
 
 type CreateCIRequest struct {

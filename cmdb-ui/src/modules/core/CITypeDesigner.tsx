@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Modal, Form, Input, Button, Table, message, Select, Switch } from 'antd'
+import { Modal, Form, Input, Button, Table, message, Select } from 'antd'
 import { coreApi } from '@/api/core'
 
 interface Props {
@@ -72,26 +72,6 @@ export default function CITypeDesigner({ open, onClose }: Props) {
             </Form.Item>
             <Form.Item name="value_type" initialValue="text" style={{ width: 120 }}>
               <Select options={VALUE_TYPES.map(t => ({ label: t, value: t }))} />
-            </Form.Item>
-            <Form.Item name="is_reference" valuePropName="checked" style={{ marginBottom: 0 }}>
-              <Switch checkedChildren="引用" unCheckedChildren="非引用" />
-            </Form.Item>
-            <Form.Item
-              noStyle
-              shouldUpdate={(prev, curr) => prev.is_reference !== curr.is_reference}
-            >
-              {({ getFieldValue }) =>
-                getFieldValue('is_reference') ? (
-                  <Form.Item name="ref_table" style={{ width: 200 }}>
-                    <Select
-                      placeholder="引用表"
-                      options={[
-                        { label: 'IP地址', value: 'cmdb_ipam.ip_addresses' },
-                      ]}
-                    />
-                  </Form.Item>
-                ) : null
-              }
             </Form.Item>
           </Form>
           <Button onClick={addAttr}>添加</Button>

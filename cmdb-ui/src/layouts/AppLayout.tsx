@@ -1,6 +1,6 @@
-import { Layout, Menu, Button } from 'antd'
+import { Layout, Menu } from 'antd'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { HomeOutlined, BuildOutlined, DatabaseOutlined, AppstoreOutlined, ApartmentOutlined, BankOutlined, RadarChartOutlined, RobotOutlined, ClusterOutlined, EnvironmentOutlined, DashboardOutlined, LogoutOutlined } from '@ant-design/icons'
+import { DatabaseOutlined, AppstoreOutlined } from '@ant-design/icons'
 
 const { Header, Sider, Content } = Layout
 
@@ -8,31 +8,15 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    window.location.href = '/login'
-  }
-
   const menuItems = [
-    { key: '/', icon: <HomeOutlined />, label: '仪表盘' },
-    { key: '/rack', icon: <BuildOutlined />, label: '机柜视图' },
     { key: '/citypes', icon: <AppstoreOutlined />, label: '模型管理' },
     { key: '/ci', icon: <DatabaseOutlined />, label: '资源管理' },
-    { key: '/ipam', icon: <ApartmentOutlined />, label: 'IPAM' },
-    { key: '/dcim', icon: <BankOutlined />, label: 'DCIM' },
-    { key: '/discovery', icon: <RadarChartOutlined />, label: '自动发现' },
-    { key: '/agents', icon: <RobotOutlined />, label: 'Agent管理' },
-    { key: '/relations', icon: <ApartmentOutlined />, label: '关系图谱' },
-    { key: '/topology', icon: <ClusterOutlined />, label: '层级拓扑' },
-    { key: '/idcmap', icon: <EnvironmentOutlined />, label: 'IDC地图' },
-    { key: '/monitor', icon: <DashboardOutlined />, label: '监控集成' },
   ]
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <Header style={{ background: '#fff', padding: '0 24px', borderBottom: '1px solid #f0f0f0' }}>
         <h2 style={{ margin: 0 }}>CMDB</h2>
-        <Button icon={<LogoutOutlined />} onClick={handleLogout}>登出</Button>
       </Header>
       <Layout>
         <Sider theme="light" style={{ borderRight: '1px solid #f0f0f0' }}>
